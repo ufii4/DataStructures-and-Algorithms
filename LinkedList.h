@@ -53,7 +53,7 @@ public:
 
     virtual void sort(std::function<bool(T, T)> compare);
 
-    inline T &operator[](int index){return getNode(index)->object;};
+    inline T &operator[](int index) { return getNode(index)->object; };
 
     inline T &operator[](size_t &i) { return this->get(i); }
 
@@ -204,7 +204,6 @@ template<class T>
 void LinkedList<T>::sort(std::function<bool(T, T)>) {
 
 }
-
 
 
 #endif //LINKEDLIST_H
