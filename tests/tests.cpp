@@ -10,6 +10,7 @@
 #include "../LinkedList.h"
 #include "../Heap.h"
 #include "../AVLTree.h"
+#include "../DisjointSet.h"
 
 int *generateRandomIntegerArray(int n) {
     if (n <= 0) {
@@ -164,5 +165,17 @@ TEST_F(AVLTreeTests,test1){
     tree->insert(9,9);
     EXPECT_EQ(5,tree->getHeight());
     EXPECT_EQ(nullptr,getLeft(tree->getSubTree(1)));
+
+}
+
+TEST(DisjointSetTests,test0){
+    auto set = DisjointSet(6);
+    EXPECT_EQ(1,set.find(1));
+    set.merge(1,2);
+    EXPECT_EQ(set.find(1),set.find(2));
+    set.merge(1,3);
+    set.merge(4,5);
+    set.merge(3,5);
+    EXPECT_EQ(set.find(3),set.find(4));
 
 }
