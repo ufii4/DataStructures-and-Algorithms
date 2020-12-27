@@ -114,24 +114,11 @@ class AVLTreeTests : public ::testing::Test{
 protected:
     void SetUp() override {
         tree = new AVLTree<int>();
-        int* array = generateRandomIntegerArray(n);
-        for (int i = 0; i < n; i++) {
-            tree->insert(array[i],array[i]);
-        }
     }
-    int n = 10;
     AVLTree<int> *tree;
-
-    AVLTree<int> *getLeft(AVLTree<int> *t){
-        return t->left;
-    }
-    AVLTree<int> *getRight(AVLTree<int> *t){
-        return t->right;
-    }
 };
 
 TEST_F(AVLTreeTests, edgeCaseTests){
-    tree->reset();
     EXPECT_EQ(0,tree->getSize());
     EXPECT_EQ(0,tree->getHeight());
     tree->insert(1,1);
@@ -139,16 +126,11 @@ TEST_F(AVLTreeTests, edgeCaseTests){
     EXPECT_EQ(1,tree->getHeight());
 }
 
-TEST_F(AVLTreeTests,test0){
-    EXPECT_EQ(n,tree->getSize());
-    EXPECT_EQ((int)log2(n),tree->getHeight());
-}
-
 TEST_F(AVLTreeTests,test1){
-    tree->reset();
     tree->insert(3, 3);
     tree->insert(2,2);
     tree->insert(1,1);
+    EXPECT_EQ(tree,tree->getSubTree(2));
     tree->insert(4,4);
     tree->insert(5,5);
     tree->insert(6,6);
@@ -163,8 +145,8 @@ TEST_F(AVLTreeTests,test1){
     tree->insert(10,10);
     tree->insert(8,8);
     tree->insert(9,9);
+    EXPECT_EQ(16,tree->getSize());
     EXPECT_EQ(5,tree->getHeight());
-    EXPECT_EQ(nullptr,getLeft(tree->getSubTree(1)));
 
 }
 

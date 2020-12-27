@@ -6,13 +6,28 @@
 #define DATASTRUCTURES_AND_ALGORITHMS_AVLTREE_H
 
 #include <string>
+#include <cmath>
+
+enum dir : bool {
+    left = 0, right = 1
+};
 
 template<class T>
 class AVLTree {
     friend class AVLTreeTests;
 
-protected:
-    void setParent(AVLTree *parent);
+public:
+    inline void setParent(AVLTree<T> *parent);
+
+    inline void setLeft(AVLTree<T> *left);
+
+    inline void setRight(AVLTree<T> *right);
+
+    inline AVLTree<T> *getLeft() const;
+
+    inline AVLTree<T> *getRight() const;
+
+    inline AVLTree<T> *getParent() const;
 
     AVLTree<T> *getNext(int key);
 
@@ -24,9 +39,10 @@ protected:
 
     bool isBalanced() const;
 
-    AVLTree<T> *getUnBalancedNode();
+    static AVLTree<T> *getUnBalancedNode(AVLTree<T> *leaf);
 
-    void balanceTree();
+    static void balanceTree(AVLTree<T> *leef);
+
 public:
     AVLTree();
 
@@ -62,7 +78,9 @@ private:
 
 template<class T>
 void AVLTree<T>::setParent(AVLTree *parent) {
-    this->parent = parent;
+    if (this) {
+        this->parent = parent;
+    }
 }
 
 template<class T>
@@ -72,23 +90,21 @@ AVLTree<T> *AVLTree<T>::getNext(int key) {
 
 template<class T>
 bool AVLTree<T>::setNext(int key, T object) {
+    auto *toSet = new AVLTree<T>(key, object);
+    toSet->setParent(this);
     if (this->key < key) {
-        if (this->right != nullptr) {
+        if (this->getRight() != nullptr) {
             return false;
         }
-        auto *toSet = new AVLTree<T>(key, object);
-        toSet->setParent(this);
-        this->right = toSet;
-        return true;
+        this->setRight(toSet);
     } else {
-        if (this->left != nullptr) {
+        if (this->getLeft() != nullptr) {
             return false;
         }
-        auto *toSet = new AVLTree<T>(key, object);
-        toSet->setParent(this);
-        this->left = toSet;
-        return true;
+        this->setLeft(toSet);
     }
+    balanceTree(getUnBalancedNode(toSet));
+    return true;
 }
 
 template<class T>
@@ -98,12 +114,18 @@ AVLTree<T> *AVLTree<T>::getAncestor() {
 
 template<class T>
 bool AVLTree<T>::hasNext() const {
-    return right == nullptr || left == nullptr;
+    if (this) {
+        return right == nullptr || left == nullptr;
+    }
+    return false;
 }
 
 template<class T>
 bool AVLTree<T>::isBalanced() const {
-    return abs(left->getHeight() - right->getHeight()) <= 1;
+    if (this) {
+        return std::abs((int) left->getHeight() - (int) right->getHeight()) <= 1;
+    }
+    return true;
 }
 
 template<class T>
@@ -150,6 +172,9 @@ unsigned int AVLTree<T>::getSize() const {
 
 template<class T>
 unsigned int AVLTree<T>::getHeight() const {
+//      I do realize that this is quite inefficient, especially when isBalanced() uses this method.
+//  The idea of dynamic programming should be utilized here. But emm -.- No idea now.
+//  ? Add a field height to the class. (cons: height of each tree is hard to manage when updating)
     unsigned int i = 0;
     if (this != nullptr && this->object != NULL) {
         i++;
@@ -162,6 +187,7 @@ unsigned int AVLTree<T>::getHeight() const {
 template<class T>
 bool AVLTree<T>::insert(int key, const T &object) {
     if (this->object == NULL) {
+        this->key = key;
         this->object = object;
         return true;
     }
@@ -187,13 +213,7 @@ T AVLTree<T>::search(int key) const {
 
 template<class T>
 T AVLTree<T>::remove(int key) {
-    if (this->key == key) {
-        return this->object;
-    } else if (getNext(key) == nullptr) {
-        return NULL;
-    } else {
-        return this->getNext(key)->search(key);
-    }
+
 }
 
 template<class T>
@@ -218,16 +238,103 @@ void AVLTree<T>::reset() {
 }
 
 template<class T>
-AVLTree<T> *AVLTree<T>::getUnBalancedNode() {
+AVLTree<T> *AVLTree<T>::getUnBalancedNode(AVLTree<T> *leaf) {
+    if (leaf == nullptr) {
+        return nullptr;
+    }
+    if (!leaf->isBalanced()) {
+        return leaf;
+    }
+    return getUnBalancedNode(leaf->getParent());
+}
+
+template<class T>
+void AVLTree<T>::balanceTree(AVLTree<T> *unBalanced) {
+    if (unBalanced->isBalanced()) {
+        return;
+    }
+    dir d1;
+    dir d2;
+    AVLTree<T> *n1;
+    AVLTree<T> *n2;
+    if (unBalanced->getLeft()->getHeight() >= unBalanced->getRight()->getHeight()) {
+        d1 = dir::left;
+        n1 = unBalanced->getLeft();
+    } else {
+        d1 = dir::right;
+        n1 = unBalanced->getRight();
+    }
+    if (n1->getLeft()->getHeight() >= n1->getRight()->getHeight()) {
+        d2 = dir::left;
+        n2 = n1->getLeft();
+    } else {
+        d2 = dir::right;
+        n2 = n1->getRight();
+    }
+    if (d1 == d2) {
+        AVLTree<T> *t = d1 ? n1->getLeft() : n1->getRight();
+        n1->setParent(unBalanced->getParent());
+        unBalanced->setParent(n1);
+        t->setParent(unBalanced);
+        if (d1) {
+            unBalanced->setRight(t);
+        } else {
+            unBalanced->setLeft(t);
+        }
+    } else {
+        AVLTree<T> *t1 = n2->getLeft();
+        AVLTree<T> *t2 = n2->getRight();
+        n2->setParent(unBalanced->getParent());
+        n2->setLeft(unBalanced);
+        unBalanced->setParent(n2);
+        n2->setRight(n1);
+        n1->setParent(n2);
+        if (d1) {
+            n1->setRight(t1);
+            unBalanced->setLeft(t2);
+        } else {
+            n1->setLeft(t2);
+            unBalanced->setRight(t1);
+        }
+    }
+}
+
+template<class T>
+void AVLTree<T>::setLeft(AVLTree<T> *left) {
+    if (this) {
+        this->left = left;
+    }
+}
+
+template<class T>
+void AVLTree<T>::setRight(AVLTree<T> *right) {
+    if (this) {
+        this->right = right;
+    }
+}
+
+template<class T>
+AVLTree<T> *AVLTree<T>::getLeft() const {
+    if (this) {
+        return this->left;
+    }
     return nullptr;
 }
 
 template<class T>
-void AVLTree<T>::balanceTree() {
-    if(isBalanced()){
-        return;
+AVLTree<T> *AVLTree<T>::getRight() const {
+    if (this) {
+        return this->right;
     }
+    return nullptr;
+}
 
+template<class T>
+AVLTree<T> *AVLTree<T>::getParent() const {
+    if (this) {
+        return this->parent;
+    }
+    return nullptr;
 }
 
 
