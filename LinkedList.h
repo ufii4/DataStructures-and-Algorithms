@@ -6,25 +6,23 @@
 #define LINKEDLIST_H
 
 template<class T>
-struct Node {
-    Node(T object) {
-        this->object = object;
-        pNext = nullptr;
-    }
-
-    T object;
-    Node<T> *pNext;
-};
-
-template<class T>
 class LinkedList {
 protected:
-    int size;
-    Node<T> *pHead;
-    Node<T> *pLast;
-    Node<T> *lastNodeGot = nullptr;
+    struct Node {
+        Node(T object) {
+            this->object = object;
+            pNext = nullptr;
+        }
+        T object;
+        Node *pNext;
+    };
 
-    Node<T> *getNode(int index);
+    int size;
+    Node *pHead;
+    Node *pLast;
+    Node *lastNodeGot = nullptr;
+
+    Node *getNode(int index);
 
 public:
     LinkedList();
@@ -72,23 +70,23 @@ LinkedList<T>::LinkedList(int size, T _default) {
     if (size >= 0) {
         this->size = size;
         for (int i = 0; i < size; i++) {
-            this->pushBack(new Node<T>(_default));
+            this->pushBack(new Node(_default));
         }
     }
 }
 
 template<class T>
 LinkedList<T>::~LinkedList() {
-    Node<T> *p_current = pHead;
+    Node *p_current = pHead;
     while (p_current != nullptr) {
-        Node<T> *p_next = p_current->pNext;
+        Node *p_next = p_current->pNext;
         delete p_current;
         p_current = p_next;
     }
 }
 
 template<class T>
-Node<T> *LinkedList<T>::getNode(int index) {
+typename LinkedList<T>::Node *LinkedList<T>::getNode(int index) {
     if (index < 0 || index >= size) {
         return nullptr;
     }
@@ -107,10 +105,10 @@ int LinkedList<T>::getSize() const {
 template<class T>
 bool LinkedList<T>::pushBack(T object) {
     if (pHead) {
-        pLast->pNext = new Node<T>(object);
+        pLast->pNext = new Node(object);
         pLast = pLast->pNext;
     } else {
-        pHead = new Node<T>(object);
+        pHead = new Node(object);
         pLast = pHead;
     }
     size++;
@@ -121,13 +119,13 @@ template<class T>
 bool LinkedList<T>::pushFront(T object) {
     if (pHead) {
         auto tmp = pHead;
-        pHead = new Node<T>(object);
+        pHead = new Node(object);
         pHead->pNext = tmp;
         if (size == 0) {
             pLast = pHead;
         }
     } else {
-        pHead = new Node<T>(object);
+        pHead = new Node(object);
         pLast = pHead;
     }
     size++;
