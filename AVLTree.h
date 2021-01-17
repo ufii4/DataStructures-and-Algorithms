@@ -100,7 +100,7 @@ typename AVLTree<T>::Node *AVLTree<T>::Node::getNext(int key) {
 template<class T>
 typename AVLTree<T>::Node *AVLTree<T>::Node::getNext(dir dir) {
     if (this) {
-        return dir ? pRight : pLeft;
+        return dir ? this->pRight : this->pLeft;
     }
     return nullptr;
 }
@@ -245,7 +245,7 @@ unsigned int AVLTree<T>::getHeight(AVLTree::Node *p) {
 
 template<class T>
 bool AVLTree<T>::isBalanced(AVLTree::Node *p) {
-    return abs((int) getHeight(p->getNext(left) - (int) getHeight(p->getNext(right)))) <= 1;
+    return abs((int) getHeight(p->getNext(left)) - (int) getHeight(p->getNext(right))) <= 1;
 }
 
 template<class T>
@@ -285,15 +285,13 @@ void AVLTree<T>::balance(AVLTree<T>::Node *unBalanced) {
     if (d1 == d2) {
         Node *t = d1 ? n1->getNext(left) : n1->getNext(right);
         Node *p = unBalanced->getParent();
-        n1->setParent(p);
         if (p) {
             p->setNext(n1->getKey(), n1);
         } else {
+            n1->setParent(nullptr);
             pHead = n1;
         }
-        unBalanced->setParent(n1);
         n1->setNext(d1?left:right,unBalanced);
-        t->setParent(unBalanced);
         if (d1) {
             unBalanced->setNext(right, t);
         } else {
@@ -303,22 +301,20 @@ void AVLTree<T>::balance(AVLTree<T>::Node *unBalanced) {
         Node *t1 = n2->getNext(left);
         Node *t2 = n2->getNext(right);
         Node *p = unBalanced->getParent();
-        n2->setParent(p);
         if (p) {
             p->setNext(n2->getKey(), n2);
         } else {
+            n2->setParent(nullptr);
             pHead = n2;
         }
         n2->setNext(d2, unBalanced);
-        unBalanced->setParent(n2);
-        n2->setNext(d2, n1);
-        n1->setParent(n2);
+        n2->setNext(d1, n1);
         if (d1) {
-            n1->setNext(right, t1);
-            unBalanced->setNext(left, t2);
-        } else {
             n1->setNext(left, t2);
             unBalanced->setNext(right, t1);
+        } else {
+            n1->setNext(right, t2);
+            unBalanced->setNext(left, t1);
         }
     }
 }

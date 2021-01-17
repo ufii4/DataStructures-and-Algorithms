@@ -142,10 +142,11 @@ TEST_F(AVLTreeTests,test1){
     tree->insert(12,12);
     tree->insert(11,11);
     tree->insert(10,10);
+    EXPECT_EQ(4,tree->getHeight());
     tree->insert(8,8);
-    tree->insert(9,9);
-    EXPECT_EQ(17,tree->getSize());
     EXPECT_EQ(5,tree->getHeight());
+    tree->insert(9,9);
+    EXPECT_EQ(16,tree->getSize());
 
 }
 
