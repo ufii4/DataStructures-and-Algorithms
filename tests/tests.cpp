@@ -2,7 +2,6 @@
 // Created by pcxie on 2020/12/3.
 //
 
-#include <utility>
 #include <exception>
 #include <cmath>
 
@@ -38,8 +37,8 @@ protected:
     };
 
     static bool inOrder(int n, int *array, std::function<bool(int, int)> compare) {
-        for (int i = 0; i < n-1; i++) {
-            if (!compare(array[i],array[i+1])){
+        for (int i = 0; i < n - 1; i++) {
+            if (!compare(array[i], array[i + 1])) {
                 return false;
             }
         }
@@ -101,63 +100,87 @@ TEST_F(HeapTests, BuildHeapTest) {
     Heap<int>::buildHeap(n, array, compare);
     int max = array[0];
     for (int i = 1; i < n; i++) {
-        EXPECT_TRUE(max>array[i]);
+        EXPECT_TRUE(max > array[i]);
     }
 }
 
 TEST_F(HeapTests, HeapSortTest) {
     Heap<int>::heapSort(n, array, compare);
-    EXPECT_TRUE(!inOrder(n,array,compare));
+    EXPECT_TRUE(!inOrder(n, array, compare));
 }
 
-class AVLTreeTests : public ::testing::Test{
+class AVLTreeTests : public ::testing::Test {
 protected:
     void SetUp() override {
         tree = new AVLTree<int>();
     }
+
+    void TearDown() override {
+        delete tree;
+        Test::TearDown();
+    }
+
     AVLTree<int> *tree;
 };
 
-TEST_F(AVLTreeTests, edgeCaseTests){
-    EXPECT_EQ(0,tree->getSize());
-    EXPECT_EQ(0,tree->getHeight());
-    tree->insert(1,1);
-    EXPECT_EQ(1,tree->getSize());
-    EXPECT_EQ(1,tree->getHeight());
+TEST_F(AVLTreeTests, edgeCaseTests) {
+    EXPECT_EQ(0, tree->getSize());
+    EXPECT_EQ(0, tree->getHeight());
+    tree->insert(1, 1);
+    EXPECT_EQ(1, tree->getSize());
+    EXPECT_EQ(1, tree->getHeight());
 }
 
-TEST_F(AVLTreeTests,test1){
+TEST_F(AVLTreeTests, test1) {
     tree->insert(3, 3);
-    tree->insert(2,2);
-    tree->insert(1,1);
-    tree->insert(4,4);
-    tree->insert(5,5);
-    tree->insert(6,6);
-    tree->insert(7,7);
-    tree->insert(16,16);
-    tree->insert(4,4);
-    tree->insert(15,15);
-    tree->insert(14,14);
-    tree->insert(13,13);
-    tree->insert(12,12);
-    tree->insert(11,11);
-    tree->insert(10,10);
-    EXPECT_EQ(4,tree->getHeight());
-    tree->insert(8,8);
-    EXPECT_EQ(5,tree->getHeight());
-    tree->insert(9,9);
-    EXPECT_EQ(16,tree->getSize());
+    tree->insert(2, 2);
+    tree->insert(1, 1);
+    tree->insert(4, 4);
+    tree->insert(5, 5);
+    tree->insert(6, 6);
+    tree->insert(7, 7);
+    tree->insert(16, 16);
+    tree->insert(4, 4);
+    tree->insert(15, 15);
+    tree->insert(14, 14);
+    tree->insert(13, 13);
+    tree->insert(12, 12);
+    tree->insert(11, 11);
+    tree->insert(10, 10);
+    EXPECT_EQ(4, tree->getHeight());
+    tree->insert(8, 8);
+    EXPECT_EQ(5, tree->getHeight());
+    tree->insert(9, 9);
+    EXPECT_EQ(16, tree->getSize());
+    EXPECT_EQ("1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16", tree->getKeys());
 
 }
 
-TEST(DisjointSetTests,test0){
+TEST_F(AVLTreeTests, test2){
+    tree->insert(20, 3);
+    tree->insert(10, 2);
+    tree->insert(35, 1);
+    tree->insert(5, 4);
+    tree->insert(15, 5);
+    tree->insert(25, 6);
+    tree->insert(40, 3);
+    tree->insert(18, 2);
+    tree->insert(30, 1);
+    tree->insert(38, 4);
+    tree->insert(45, 5);
+    tree->insert(50, 6);
+    tree->remove(5);
+    //TODO: optimization
+}
+
+TEST(DisjointSetTests, test0) {
     auto set = DisjointSet(6);
-    EXPECT_EQ(1,set.find(1));
-    set.merge(1,2);
-    EXPECT_EQ(set.find(1),set.find(2));
-    set.merge(1,3);
-    set.merge(4,5);
-    set.merge(3,5);
-    EXPECT_EQ(set.find(3),set.find(4));
+    EXPECT_EQ(1, set.find(1));
+    set.merge(1, 2);
+    EXPECT_EQ(set.find(1), set.find(2));
+    set.merge(1, 3);
+    set.merge(4, 5);
+    set.merge(3, 5);
+    EXPECT_EQ(set.find(3), set.find(4));
 
 }

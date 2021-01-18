@@ -7,12 +7,9 @@
 
 #include <string>
 #include <cmath>
-#include <stdexcept>
 
 template<class T>
 class AVLTree {
-    friend class AVLTreeTests;
-
 private:
     enum dir : bool {
         left = 0, right = 1
@@ -25,9 +22,10 @@ private:
         Node *pLeft;
         Node *pRight;
         Node *pParent;
-        AVLTree<T> *tree;
 
-        Node(int key, T object, AVLTree<T> *tree);
+        Node(int key, T object);
+
+        ~Node();
 
         inline Node *getNext(int key);
 
@@ -39,19 +37,17 @@ private:
 
         inline T getObject();
 
-        void setNext(int key, T object);
-
         void setNext(dir dir, Node *p);
 
         void setNext(int key, Node *p);
 
-        void setAndBalance(int key, T object);
-
         void setParent(Node *p);
+
+        void clearChild();
 
     };
 
-    Node *pHead;
+    Node *pRoot;
 
     unsigned int size;
 
@@ -62,6 +58,14 @@ private:
     void balance(Node *unBalanced);
 
     unsigned int getHeight(Node *p);
+
+    Node *treeExtreme(Node *p, dir dir);
+
+    Node *getSuccessor(Node *p, dir dir);
+
+    std::string keyIterate(Node *p);
+
+    T remove(Node *p);
 
 public:
     AVLTree();
@@ -81,13 +85,21 @@ public:
     bool isEmpty() const;
 
     void reset();
+
+    std::string getKeys();
 };
 
 template<class T>
-AVLTree<T>::Node::Node(int key, T object, AVLTree<T> *tree):key(key), object(object), tree(tree) {
+AVLTree<T>::Node::Node(int key, T object):key(key), object(object) {
     pLeft = nullptr;
     pRight = nullptr;
     pParent = nullptr;
+}
+
+template<class T>
+AVLTree<T>::Node::~Node() {
+    delete pLeft;
+    delete pRight;
 }
 
 template<class T>
@@ -135,18 +147,14 @@ void AVLTree<T>::Node::setParent(AVLTree::Node *p) {
 
 template<class T>
 void AVLTree<T>::Node::setNext(AVLTree::dir dir, AVLTree::Node *p) {
-    p->setParent(this);
+    if (p){
+        p->setParent(this);
+    }
     if (dir) {
         this->pRight = p;
     } else {
         this->pLeft = p;
     }
-}
-
-template<class T>
-void AVLTree<T>::Node::setNext(int key, T object) {
-    auto *toSet = new Node(key, object, this->tree);
-    setNext(key, toSet);
 }
 
 template<class T>
@@ -156,22 +164,20 @@ void AVLTree<T>::Node::setNext(int key, AVLTree::Node *p) {
 }
 
 template<class T>
-void AVLTree<T>::Node::setAndBalance(int key, T object) {
-    auto *toSet = new Node(key, object, this->tree);
-    setNext(key, toSet);
-    tree->balance(tree->getUnbalancedNode(toSet));
+void AVLTree<T>::Node::clearChild() {
+    pLeft = nullptr;
+    pRight = nullptr;
 }
 
 template<class T>
 AVLTree<T>::AVLTree() {
-    pHead = nullptr;
+    pRoot = nullptr;
     size = 0;
 }
 
 template<class T>
 AVLTree<T>::~AVLTree() {
-    delete left;
-    delete right;
+    delete pRoot;
 }
 
 template<class T>
@@ -181,55 +187,103 @@ unsigned int AVLTree<T>::getSize() const {
 
 template<class T>
 unsigned int AVLTree<T>::getHeight() {
-    return getHeight(pHead);
+    return getHeight(pRoot);
 }
 
 template<class T>
 bool AVLTree<T>::insert(int key, const T &object) {
-    if (!pHead) {
-        pHead = new Node(key, object, this);
+    if (!pRoot) {
+        pRoot = new Node(key, object);
         size++;
         return true;
     }
-    Node *current = pHead;
+    Node *current = pRoot;
     for (Node *next = current->getNext(key); next != nullptr; next = current->getNext(key)) {
         if (current->getKey() == key) {
             return false;
         }
         current = next;
     }
-    current->setAndBalance(key, object);
+    auto *toSet = new Node(key, object);
+    current->setNext(key, toSet);
+    balance(getUnbalancedNode(toSet));
     size++;
     return true;
 }
 
 template<class T>
 T AVLTree<T>::search(int key) const {
-    Node *current = pHead;
-    while (current != nullptr) {
+    Node *current = pRoot;
+    for (Node *next = current->getNext(key); next != nullptr; next = current->getNext(key)) {
         if (current->getKey() == key) {
             return current->getObject();
-        } else {
-            current = current->getNext(key);
         }
+        current = next;
     }
     return NULL;
 }
 
 template<class T>
 T AVLTree<T>::remove(int key) {
+    Node *current = pRoot;
+    for (Node *next = current->getNext(key); next != nullptr; next = current->getNext(key)) {
+        current = next;
+        if (current->getKey() == key) {
+            return remove(current);
+        }
 
+    }
+    return NULL;
+}
+
+template<class T>
+T AVLTree<T>::remove(AVLTree::Node *p) {
+    T _ = p->getObject();
+    Node *childLeft = p->getNext(left);
+    Node *childRight = p->getNext(right);
+    Node *parent = p->getParent();
+    Node *unBalanced;
+    dir dir = parent->getNext(left) == p?left:right;
+    if (childLeft && childRight){
+        Node *successor = getSuccessor(p,right);
+        Node *successorChild = successor->getNext(right);
+        Node *successorParent = successor->getParent();
+        parent->setNext(dir,successor);
+        successor->setNext(left,childLeft);
+        if (successor != childRight){
+            successor->setNext(right,childRight);
+            successorParent->setNext(left,successorChild);
+        }
+        unBalanced = getUnbalancedNode(successor);
+    } else if (childRight) {
+        parent->setNext(dir,childRight);
+        unBalanced = getUnbalancedNode(childRight);
+    } else if (childLeft){
+        parent->setNext(dir,childLeft);
+        unBalanced = getUnbalancedNode(childLeft);
+    }else{
+        parent->setNext(dir, nullptr);
+        unBalanced = getUnbalancedNode(parent);
+    }
+    while (unBalanced!= nullptr){
+        Node* next = unBalanced->getParent();
+        balance(unBalanced);
+        unBalanced = getUnbalancedNode(next);
+    }
+    p->clearChild(); //So that it will not delete other nodes by its destructor.
+    delete p;
+    return _;
 }
 
 template<class T>
 bool AVLTree<T>::isEmpty() const {
-    return !pHead;
+    return !pRoot;
 }
 
 template<class T>
 void AVLTree<T>::reset() {
-    delete pHead;
-    pHead = nullptr;
+    delete pRoot;
+    pRoot = nullptr;
 }
 
 template<class T>
@@ -289,9 +343,9 @@ void AVLTree<T>::balance(AVLTree<T>::Node *unBalanced) {
             p->setNext(n1->getKey(), n1);
         } else {
             n1->setParent(nullptr);
-            pHead = n1;
+            pRoot = n1;
         }
-        n1->setNext(d1?left:right,unBalanced);
+        n1->setNext(d1 ? left : right, unBalanced);
         if (d1) {
             unBalanced->setNext(right, t);
         } else {
@@ -305,7 +359,7 @@ void AVLTree<T>::balance(AVLTree<T>::Node *unBalanced) {
             p->setNext(n2->getKey(), n2);
         } else {
             n2->setParent(nullptr);
-            pHead = n2;
+            pRoot = n2;
         }
         n2->setNext(d2, unBalanced);
         n2->setNext(d1, n1);
@@ -316,6 +370,40 @@ void AVLTree<T>::balance(AVLTree<T>::Node *unBalanced) {
             n1->setNext(right, t2);
             unBalanced->setNext(left, t1);
         }
+    }
+}
+
+template<class T>
+std::string AVLTree<T>::getKeys() {
+    std::string _ = keyIterate(pRoot);
+    _.pop_back();
+    return _;
+}
+
+template<class T>
+std::string AVLTree<T>::keyIterate(AVLTree::Node *p) {
+    std::string _ = p->getNext(left) ? keyIterate(p->getNext(left)) : "";
+    _ += std::to_string(p->getKey()) + " ";
+    _ += p->getNext(right) ? keyIterate(p->getNext(right)) : "";
+    return _;
+}
+
+template<class T>
+typename AVLTree<T>::Node *AVLTree<T>::treeExtreme(AVLTree::Node *p, AVLTree::dir dir) {
+    return p->getNext(dir)?treeExtreme(p->getNext(dir),dir): p;
+}
+
+template<class T>
+typename AVLTree<T>::Node *AVLTree<T>::getSuccessor(AVLTree::Node *p, AVLTree::dir dir) {
+    if (p->getNext(dir)){
+         return treeExtreme(p->getNext(dir),dir?left:right);
+    } else {
+        Node *current = p;
+        Node *next = current->getParent();
+        for (; next!= nullptr && next->getNext(dir?left:right)!=current ; next = current->getParent()) {
+            current = next;
+        }
+        return next;
     }
 }
 
