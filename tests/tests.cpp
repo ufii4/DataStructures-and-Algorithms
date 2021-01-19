@@ -129,6 +129,9 @@ TEST_F(AVLTreeTests, edgeCaseTests) {
     tree->insert(1, 1);
     EXPECT_EQ(1, tree->getSize());
     EXPECT_EQ(1, tree->getHeight());
+    tree->reset();
+    EXPECT_EQ(0, tree->getSize());
+    EXPECT_EQ(0, tree->getHeight());
 }
 
 TEST_F(AVLTreeTests, test1) {
@@ -140,6 +143,7 @@ TEST_F(AVLTreeTests, test1) {
     tree->insert(6, 6);
     tree->insert(7, 7);
     tree->insert(16, 16);
+    tree->insert(4, 4);
     tree->insert(4, 4);
     tree->insert(15, 15);
     tree->insert(14, 14);
@@ -153,7 +157,6 @@ TEST_F(AVLTreeTests, test1) {
     tree->insert(9, 9);
     EXPECT_EQ(16, tree->getSize());
     EXPECT_EQ("1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16", tree->getKeys());
-
 }
 
 TEST_F(AVLTreeTests, test2){
@@ -170,7 +173,26 @@ TEST_F(AVLTreeTests, test2){
     tree->insert(45, 5);
     tree->insert(50, 6);
     tree->remove(5);
-    //TODO: optimization
+    EXPECT_EQ(11,tree->getSize());
+    EXPECT_EQ("10 15 18 20 25 30 35 38 40 45 50", tree->getKeys());
+}
+
+TEST_F(AVLTreeTests, generalCaseTest){
+    int n = 100;
+    int *array = generateRandomIntegerArray(n);
+    for (int i = 0; i < n; i++) {
+        tree->insert(array[i],0);
+        EXPECT_EQ(i+1,tree->getSize());
+        EXPECT_GE(tree->getHeight(),floor(log2(tree->getSize()))+1);
+        EXPECT_LE(tree->getHeight(),1.44 * (floor(log2(tree->getSize()))+1));
+    }
+    for (int i = 0; i < n; i++) {
+        EXPECT_EQ(0,tree->remove(array[i]));
+        EXPECT_EQ(n-i-1,tree->getSize());
+        EXPECT_GE(tree->getHeight(),floor(log2(tree->getSize()))+1);
+        EXPECT_LE(tree->getHeight(),1.44 * (floor(log2(tree->getSize()))+1));
+    }
+    delete[] array;
 }
 
 TEST(DisjointSetTests, test0) {
