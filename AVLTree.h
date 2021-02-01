@@ -33,20 +33,11 @@ private:
 
         inline Node *getNext(dir dir);
 
-        inline Node *getParent();
+        inline void setNext(dir dir, Node *p);
 
-        inline int getKey();
+        inline void setNext(int key, Node *p);
 
-        inline T getObject();
-
-        void setNext(dir dir, Node *p);
-
-        void setNext(int key, Node *p);
-
-        void setParent(Node *p);
-
-        void clearChild();
-
+        inline void clearChild();
     };
 
     Node *pRoot;
@@ -106,48 +97,18 @@ AVLTree<T>::Node::~Node() {
 
 template<class T>
 typename AVLTree<T>::Node *AVLTree<T>::Node::getNext(int key) {
-    if (this) {
-        return this->getKey() < key ? pRight : pLeft;
-    }
-    return nullptr;
+    return this->key < key ? pRight : pLeft;
 }
 
 template<class T>
 typename AVLTree<T>::Node *AVLTree<T>::Node::getNext(dir dir) {
-    if (this) {
-        return dir ? this->pRight : this->pLeft;
-    }
-    return nullptr;
-}
-
-template<class T>
-int AVLTree<T>::Node::getKey() {
-    return this->key;
-}
-
-template<class T>
-T AVLTree<T>::Node::getObject() {
-    return this->object;
-
-}
-
-template<class T>
-typename AVLTree<T>::Node *AVLTree<T>::Node::getParent() {
-    if (this) {
-        return pParent;
-    }
-    return nullptr;
-}
-
-template<class T>
-void AVLTree<T>::Node::setParent(AVLTree::Node *p) {
-    this->pParent = p;
+    return dir ? this->pRight : this->pLeft;
 }
 
 template<class T>
 void AVLTree<T>::Node::setNext(AVLTree::dir dir, AVLTree::Node *p) {
     if (p) {
-        p->setParent(this);
+        p->pParent = this;
     }
     if (dir) {
         this->pRight = p;
@@ -158,7 +119,7 @@ void AVLTree<T>::Node::setNext(AVLTree::dir dir, AVLTree::Node *p) {
 
 template<class T>
 void AVLTree<T>::Node::setNext(int key, AVLTree::Node *p) {
-    dir dir = this->getKey() < key ? right : left;
+    dir dir = this->key < key ? right : left;
     setNext(dir, p);
 }
 
@@ -198,7 +159,7 @@ bool AVLTree<T>::insert(int key, const T &object) {
     }
     Node *current = pRoot;
     for (Node *next = current->getNext(key); next != nullptr; next = current->getNext(key)) {
-        if (current->getKey() == key) {
+        if (current->key == key) {
             return false;
         }
         current = next;
@@ -214,8 +175,8 @@ template<class T>
 T AVLTree<T>::search(int key) const {
     Node *current = pRoot;
     for (Node *next = current->getNext(key); next != nullptr; next = current->getNext(key)) {
-        if (current->getKey() == key) {
-            return current->getObject();
+        if (current->key == key) {
+            return current->object;
         }
         current = next;
     }
@@ -226,7 +187,7 @@ template<class T>
 T AVLTree<T>::remove(int key) {
     Node *current = pRoot;
     for (Node *next = current->getNext(key); current != nullptr; next = current->getNext(key)) {
-        if (current->getKey() == key) {
+        if (current->key == key) {
             return remove(current);
         }
         current = next;
@@ -236,21 +197,21 @@ T AVLTree<T>::remove(int key) {
 
 template<class T>
 T AVLTree<T>::remove(AVLTree::Node *p) {
-    T _ = p->getObject();
+    T _ = p->object;
     Node *childLeft = p->getNext(left);
     Node *childRight = p->getNext(right);
-    Node *parent = p->getParent();
+    Node *parent = p->pParent;
     Node *unBalanced;
-    dir dir = parent->getNext(left) == p ? left : right;
+    dir dir = parent && parent->getNext(left) == p ? left : right;
     if (childLeft && childRight) {
         Node *successor = getSuccessor(p, right);
         Node *successorChild = successor->getNext(right);
-        Node *successorParent = successor->getParent();
-        if(parent){
+        Node *successorParent = successor->pParent;
+        if (parent) {
             parent->setNext(dir, successor);
-        }else{
+        } else {
             pRoot = successor;
-            successor->setParent(nullptr);
+            successor->pParent = nullptr;
         }
         successor->setNext(left, childLeft);
         if (successor != childRight) {
@@ -259,31 +220,31 @@ T AVLTree<T>::remove(AVLTree::Node *p) {
         }
         unBalanced = getUnbalancedNode(successor);
     } else if (childRight) {
-        if(parent){
+        if (parent) {
             parent->setNext(dir, childRight);
-        }else{
+        } else {
             pRoot = childRight;
-            childRight->setParent(nullptr);
+            childRight->pParent = nullptr;
         }
         unBalanced = getUnbalancedNode(childRight);
     } else if (childLeft) {
-        if(parent){
+        if (parent) {
             parent->setNext(dir, childLeft);
-        }else{
+        } else {
             pRoot = childLeft;
-            childLeft->setParent(nullptr);
+            childLeft->pParent = nullptr;
         }
         unBalanced = getUnbalancedNode(childLeft);
     } else {
-        if(parent){
+        if (parent) {
             parent->setNext(dir, nullptr);
-        }else{
+        } else {
             pRoot = nullptr;
         }
         unBalanced = getUnbalancedNode(parent);
     }
     while (unBalanced != nullptr) {
-        Node *next = unBalanced->getParent();
+        Node *next = unBalanced->pParent;
         balance(unBalanced);
         unBalanced = getUnbalancedNode(next);
     }
@@ -318,7 +279,10 @@ unsigned int AVLTree<T>::getHeight(AVLTree::Node *p) {
 
 template<class T>
 bool AVLTree<T>::isBalanced(AVLTree::Node *p) {
-    return abs((int) getHeight(p->getNext(left)) - (int) getHeight(p->getNext(right))) <= 1;
+    if (p) {
+        return abs((int) getHeight(p->getNext(left)) - (int) getHeight(p->getNext(right))) <= 1;
+    }
+    return true;
 }
 
 template<class T>
@@ -329,7 +293,7 @@ typename AVLTree<T>::Node *AVLTree<T>::getUnbalancedNode(AVLTree::Node *leaf) {
     if (!isBalanced(leaf)) {
         return leaf;
     }
-    return getUnbalancedNode(leaf->getParent());
+    return getUnbalancedNode(leaf->pParent);
 }
 
 template<class T>
@@ -344,11 +308,11 @@ void AVLTree<T>::balance(AVLTree<T>::Node *unBalanced) {
     if (d1 == d2) {
         // Single rotation
         Node *t = d1 ? n1->getNext(left) : n1->getNext(right);
-        Node *p = unBalanced->getParent();
+        Node *p = unBalanced->pParent;
         if (p) {
-            p->setNext(n1->getKey(), n1);
+            p->setNext(n1->key, n1);
         } else {
-            n1->setParent(nullptr);
+            n1->pParent = nullptr;
             pRoot = n1;
         }
         n1->setNext(d1 ? left : right, unBalanced);
@@ -357,17 +321,17 @@ void AVLTree<T>::balance(AVLTree<T>::Node *unBalanced) {
         // Double rotation
         Node *t1 = n2->getNext(d1);
         Node *t2 = n2->getNext(d2);
-        Node *p = unBalanced->getParent();
+        Node *p = unBalanced->pParent;
         if (p) {
-            p->setNext(n2->getKey(), n2);
+            p->setNext(n2->key, n2);
         } else {
-            n2->setParent(nullptr);
+            n2->pParent = nullptr;
             pRoot = n2;
         }
         n2->setNext(d2, unBalanced);
         n2->setNext(d1, n1);
-        n1->setNext(d2,t1);
-        unBalanced->setNext(d1,t2);
+        n1->setNext(d2, t1);
+        unBalanced->setNext(d1, t2);
     }
 }
 
@@ -381,7 +345,7 @@ std::string AVLTree<T>::getKeys() {
 template<class T>
 std::string AVLTree<T>::keyIterate(AVLTree::Node *p) {
     std::string _ = p->getNext(left) ? keyIterate(p->getNext(left)) : "";
-    _ += std::to_string(p->getKey()) + " ";
+    _ += std::to_string(p->key) + " ";
     _ += p->getNext(right) ? keyIterate(p->getNext(right)) : "";
     return _;
 }
@@ -397,8 +361,8 @@ typename AVLTree<T>::Node *AVLTree<T>::getSuccessor(AVLTree::Node *p, AVLTree::d
         return treeExtreme(p->getNext(dir), dir ? left : right);
     } else {
         Node *current = p;
-        Node *next = current->getParent();
-        for (; next != nullptr && next->getNext(dir ? left : right) != current; next = current->getParent()) {
+        Node *next = current->pParent;
+        for (; next != nullptr && next->getNext(dir ? left : right) != current; next = current->pParent) {
             current = next;
         }
         return next;

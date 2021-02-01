@@ -187,10 +187,10 @@ TEST_F(AVLTreeTests, generalCaseTest){
         EXPECT_LE(tree->getHeight(),1.44 * (floor(log2(tree->getSize()))+1));
     }
     for (int i = 0; i < n; i++) {
-        EXPECT_EQ(0,tree->remove(array[i]));
-        EXPECT_EQ(n-i-1,tree->getSize());
         EXPECT_GE(tree->getHeight(),floor(log2(tree->getSize()))+1);
         EXPECT_LE(tree->getHeight(),1.44 * (floor(log2(tree->getSize()))+1));
+        EXPECT_EQ(0,tree->remove(array[i]));
+        EXPECT_EQ(n-i-1,tree->getSize());
     }
     delete[] array;
 }
