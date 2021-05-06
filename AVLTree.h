@@ -80,6 +80,8 @@ public:
     void reset();
 
     std::string getKeys();
+
+    inline const T operator[](const size_t &i) const { return this->search(i); }
 };
 
 template<class T>
@@ -158,12 +160,11 @@ bool AVLTree<T>::insert(int key, const T &object) {
         return true;
     }
     Node *current = pRoot;
-    for (Node *next = current->getNext(key); next != nullptr; next = current->getNext(key)) {
-        if (current->key == key) {
-            return false;
-        }
-        current = next;
+    for (; current->getNext(key) != nullptr && current->key != key; current = current->getNext(key)) {
+
     }
+    if (current->key == key)
+        return false;
     auto *toSet = new Node(key, object);
     current->setNext(key, toSet);
     balance(getUnbalancedNode(toSet));
@@ -173,24 +174,20 @@ bool AVLTree<T>::insert(int key, const T &object) {
 
 template<class T>
 T AVLTree<T>::search(int key) const {
-    Node *current = pRoot;
-    for (Node *next = current->getNext(key); next != nullptr; next = current->getNext(key)) {
+    for (Node *current = pRoot; current != nullptr; current = current->getNext(key)) {
         if (current->key == key) {
             return current->object;
         }
-        current = next;
     }
-    return NULL;
+    return T();
 }
 
 template<class T>
 T AVLTree<T>::remove(int key) {
-    Node *current = pRoot;
-    for (Node *next = current->getNext(key); current != nullptr; next = current->getNext(key)) {
+    for (Node *current = pRoot; current != nullptr; current = current->getNext(key)) {
         if (current->key == key) {
             return remove(current);
         }
-        current = next;
     }
     return NULL;
 }

@@ -118,85 +118,86 @@ TEST_F(HeapTests, HeapSortTest) {
 class AVLTreeTests : public ::testing::Test {
 protected:
     void SetUp() override {
-        tree = new AVLTree<int>();
+        tree = *(new AVLTree<int>());
     }
 
-    void TearDown() override {
-        delete tree;
-        Test::TearDown();
-    }
-
-    AVLTree<int> *tree;
+    AVLTree<int> tree;
 };
 
 TEST_F(AVLTreeTests, edgeCaseTests) {
-    EXPECT_EQ(0, tree->getSize());
-    EXPECT_EQ(0, tree->getHeight());
-    tree->insert(1, 1);
-    EXPECT_EQ(1, tree->getSize());
-    EXPECT_EQ(1, tree->getHeight());
-    tree->reset();
-    EXPECT_EQ(0, tree->getSize());
-    EXPECT_EQ(0, tree->getHeight());
+    EXPECT_EQ(0, tree.getSize());
+    EXPECT_EQ(0, tree.getHeight());
+    tree.insert(1, 1);
+    EXPECT_EQ(1, tree.getSize());
+    EXPECT_EQ(1, tree.getHeight());
+    tree.reset();
+    EXPECT_EQ(0, tree.getSize());
+    EXPECT_EQ(0, tree.getHeight());
 }
 
 TEST_F(AVLTreeTests, test1) {
-    tree->insert(3, 3);
-    tree->insert(2, 2);
-    tree->insert(1, 1);
-    tree->insert(4, 4);
-    tree->insert(5, 5);
-    tree->insert(6, 6);
-    tree->insert(7, 7);
-    tree->insert(16, 16);
-    tree->insert(4, 4);
-    tree->insert(4, 4);
-    tree->insert(15, 15);
-    tree->insert(14, 14);
-    tree->insert(13, 13);
-    tree->insert(12, 12);
-    tree->insert(11, 11);
-    tree->insert(10, 10);
-    EXPECT_EQ(4, tree->getHeight());
-    tree->insert(8, 8);
-    EXPECT_EQ(5, tree->getHeight());
-    tree->insert(9, 9);
-    EXPECT_EQ(16, tree->getSize());
-    EXPECT_EQ("1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16", tree->getKeys());
+    tree.insert(3, 3);
+    tree.insert(2, 2);
+    tree.insert(1, 1);
+    tree.insert(4, 4);
+    tree.insert(5, 5);
+    tree.insert(6, 6);
+    tree.insert(7, 7);
+    tree.insert(16, 16);
+    tree.insert(4, 4);
+    tree.insert(4, 4);
+    tree.insert(15, 15);
+    tree.insert(14, 14);
+    tree.insert(13, 13);
+    tree.insert(12, 12);
+    tree.insert(11, 11);
+    tree.insert(10, 10);
+    EXPECT_EQ(4, tree.getHeight());
+    tree.insert(8, 8);
+    EXPECT_EQ(5, tree.getHeight());
+    tree.insert(9, 9);
+    EXPECT_EQ(16, tree.getSize());
+    EXPECT_EQ("1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16", tree.getKeys());
 }
 
 TEST_F(AVLTreeTests, test2){
-    tree->insert(20, 3);
-    tree->insert(10, 2);
-    tree->insert(35, 1);
-    tree->insert(5, 4);
-    tree->insert(15, 5);
-    tree->insert(25, 6);
-    tree->insert(40, 3);
-    tree->insert(18, 2);
-    tree->insert(30, 1);
-    tree->insert(38, 4);
-    tree->insert(45, 5);
-    tree->insert(50, 6);
-    tree->remove(5);
-    EXPECT_EQ(11,tree->getSize());
-    EXPECT_EQ("10 15 18 20 25 30 35 38 40 45 50", tree->getKeys());
+    tree.insert(20, 3);
+    tree.insert(10, 2);
+    tree.insert(35, 1);
+    tree.insert(5, 4);
+    tree.insert(15, 5);
+    EXPECT_EQ("5 10 15 20 35", tree.getKeys());
+    tree.insert(25, 6);
+    tree.insert(40, 3);
+    tree.insert(18, 2);
+    tree.insert(30, 1);
+    tree.insert(38, 4);
+    tree.insert(45, 5);
+    tree.insert(50, 6);
+    tree.remove(5);
+    EXPECT_EQ(11,tree.getSize());
+    EXPECT_EQ(5, tree[45]);
+    EXPECT_EQ("10 15 18 20 25 30 35 38 40 45 50", tree.getKeys());
 }
 
 TEST_F(AVLTreeTests, generalCaseTest){
+    tree.insert(0, 1);
     int n = 100;
     int *array = generateRandomIntegerArray(n);
     for (int i = 0; i < n; i++) {
-        tree->insert(array[i],0);
-        EXPECT_EQ(i+1,tree->getSize());
-        EXPECT_GE(tree->getHeight(),floor(log2(tree->getSize()))+1);
-        EXPECT_LE(tree->getHeight(),1.44 * (floor(log2(tree->getSize()))+1));
+        tree.insert(array[i],0);
+        EXPECT_EQ(1,tree.search(0));
+        EXPECT_EQ(i+2,tree.getSize());
+        EXPECT_GE(tree.getHeight(),floor(log2(tree.getSize()))+1);
+        EXPECT_LE(tree.getHeight(),1.44 * (floor(log2(tree.getSize()))+1));
     }
+    tree.remove(0);
     for (int i = 0; i < n; i++) {
-        EXPECT_GE(tree->getHeight(),floor(log2(tree->getSize()))+1);
-        EXPECT_LE(tree->getHeight(),1.44 * (floor(log2(tree->getSize()))+1));
-        EXPECT_EQ(0,tree->remove(array[i]));
-        EXPECT_EQ(n-i-1,tree->getSize());
+        EXPECT_EQ(0, tree.search(0));
+        EXPECT_GE(tree.getHeight(),floor(log2(tree.getSize()))+1);
+        EXPECT_LE(tree.getHeight(),1.44 * (floor(log2(tree.getSize()))+1));
+        EXPECT_EQ(0,tree.remove(array[i]));
+        EXPECT_EQ(n-i-1,tree.getSize());
     }
     delete[] array;
 }
